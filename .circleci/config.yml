@@ -3,8 +3,8 @@ version: 2
 jobs:
   build:
     docker:
-      - image: golang:1.10.2-stretch
-    working_directory: /go/src/github.com/kazegusuri/grpcurl
+      - image: golang:1.11.2-stretch
+    working_directory: /go/src/github.com/Code-Hex/grpcrnd
     steps:
       - checkout
       - run:
@@ -21,3 +21,34 @@ jobs:
           name: run build
           command: |
             make build
+  
+  dep:
+    docker:
+      - image: golang:1.11.2-stretch
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-vendor-{{ checksum "Gopkg.lock" }}
+      - run:
+          name: Install dependencies
+          command: |
+            if [ ! -d 'vendor' ]; then
+              make dep/vendor-only
+            fi
+      - save_cache:
+          key: v1-vendor-{{ checksum "Gopkg.lock" }}
+          paths:
+            - /go/src/github.com/Code-Hex/grpcrnd/vendor
+
+workflows:
+  version: 2
+  test_and_build:
+    jobs:
+      - build:
+          requires:
+            - dep
+      - dep:
+      - test:
+          requires:
+            - dep

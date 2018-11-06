@@ -1,4 +1,4 @@
-package grand
+package grpcrnd
 
 import (
 	"context"
@@ -177,8 +177,7 @@ func (c *reflectClient) retriveFields(fields []*desc.FieldDescriptor) map[string
 		case descriptor.FieldDescriptorProto_TYPE_BYTES:
 			m[key] = r.bytes()
 		case descriptor.FieldDescriptorProto_TYPE_STRING:
-			// m[key] = r.string()
-			m[key] = "m20400180627"
+			m[key] = r.string()
 		// Group is deprecated in proto3.
 		// case descriptor.FieldDescriptorProto_TYPE_GROUP:
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:

@@ -1,4 +1,4 @@
-package grand
+package grpcrnd
 
 import (
 	"context"
@@ -8,20 +8,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GRand represents grpc random.
-type GRand struct {
+// GRPCRand represents grpc random.
+type GRPCRand struct {
 	*Options
 }
 
-// New returns GRand struct pointer
-func New() *GRand {
-	return &GRand{
+// New returns GRPCRand struct pointer
+func New() *GRPCRand {
+	return &GRPCRand{
 		Options: &Options{},
 	}
 }
 
 // Run method will create a project and returns exit code
-func (g *GRand) Run() int {
+func (g *GRPCRand) Run() int {
 	if e := g.run(); e != nil {
 		exitCode, err := UnwrapErrors(e)
 		if err != nil {
@@ -36,7 +36,7 @@ func (g *GRand) Run() int {
 	return 0
 }
 
-func (g *GRand) prepare() error {
+func (g *GRPCRand) prepare() error {
 	_, err := parseOptions(g.Options, os.Args[1:])
 	if err != nil {
 		return errors.Wrap(err, "failed to parse options")
@@ -44,13 +44,13 @@ func (g *GRand) prepare() error {
 	return nil
 }
 
-func (g *GRand) run() error {
+func (g *GRPCRand) run() error {
 	if err := g.prepare(); err != nil {
 		return errors.Wrap(err, "failed to setup")
 	}
 	conn, err := NewGRPCConnection(
 		context.Background(),
-		"item-service-jp.fury-panda.dev5s.com:80",
+		"",
 		true,
 	)
 	if err != nil {
