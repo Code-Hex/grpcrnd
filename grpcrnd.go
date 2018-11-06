@@ -48,20 +48,27 @@ func (g *GRPCRand) run() error {
 	if err := g.prepare(); err != nil {
 		return errors.Wrap(err, "failed to setup")
 	}
+
 	conn, err := NewGRPCConnection(
 		context.Background(),
-		"",
-		true,
+		g.Addr,
+		g.Insecure,
 	)
 	if err != nil {
 		return err
 	}
 	client := NewReflectionGRPCClient(conn)
-	svcs, err := client.ListServices()
-	if err != nil {
-		return errors.Wrap(err, "failed to invoke ListServices")
+
+	if g.List {
+		if err := client.ListServices(); err != nil {
+			return errors.Wrap(err, "failed to invoke ListServices")
+		}
+		return nil
 	}
-	client.Call(g.Header, svcs[1])
+
+	if err := client.Call(g.Header, g.Call); err != nil {
+		return errors.Wrap(err, "failed to call grpc method")
+	}
 	return nil
 }
 

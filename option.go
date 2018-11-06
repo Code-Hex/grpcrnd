@@ -11,16 +11,20 @@ import (
 )
 
 const (
-	name   = "grand"
+	name   = "grpcrnd"
 	indent = "        "
 )
 
 // Options struct for parse command line arguments
 type Options struct {
-	Help   bool     `short:"h" long:"help" description:"show this message"`
-	Header []string `short:"H" long:"header" description:""`
+	Help bool   `short:"h" long:"help" description:"show this message"`
+	List bool   `short:"l" long:"list" description:"list services and methods provided by gRPC server"`
+	Call string `short:"c" long:"call" description:"specify gRPC method to call gRPC method"`
+	Addr string `short:"a" long:"addr" description:"specify like 'host:port'"`
 
-	Insecure   bool `long:"insecure" description:""`
+	Header []string `short:"H" long:"header" description:"specify headers like 'UserAgent: grpcrnd' (use with only --call)"`
+
+	Insecure   bool `long:"insecure" description:"specify the grpc secure connection"`
 	StackTrace bool `long:"trace" description:"display detail error messages"`
 }
 
