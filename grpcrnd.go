@@ -55,7 +55,7 @@ func (g *GRPCRand) run() error {
 		g.Insecure,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to make connection to grpc")
 	}
 	client := NewReflectionGRPCClient(conn)
 
