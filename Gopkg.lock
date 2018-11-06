@@ -3,14 +3,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:22a778b28e6733adab72b012184005654d0fac9b5da10e3b057efb44a43a2262"
-  name = "github.com/Code-Hex/grpcrnd"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "abac5f8d76918c132beb3faffbe701048aa25d93"
-
-[[projects]]
-  branch = "master"
   digest = "1:1ba1d79f2810270045c328ae5d674321db34e3aae468eb4233883b473c5c0467"
   name = "github.com/golang/glog"
   packages = ["."]
@@ -202,7 +194,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/Code-Hex/grpcrnd",
     "github.com/golang/glog",
     "github.com/golang/protobuf/jsonpb",
     "github.com/golang/protobuf/protoc-gen-go/descriptor",

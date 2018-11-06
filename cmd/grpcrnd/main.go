@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+
+	"github.com/Code-Hex/grpcrnd"
 )
 
 func main() {
