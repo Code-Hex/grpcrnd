@@ -19,34 +19,42 @@ func NewRand() *Rand {
 }
 
 func (r *Rand) bool() bool {
+	r.rnd.Seed(current().Unix())
 	return r.rnd.Intn(2)%2 == 0
 }
 
 func (r *Rand) int32() int32 {
+	r.rnd.Seed(current().Unix())
 	return r.rnd.Int31()
 }
 
 func (r *Rand) int64() int64 {
+	r.rnd.Seed(current().Unix())
 	return r.rnd.Int63()
 }
 
 func (r *Rand) uint32() uint32 {
+	r.rnd.Seed(current().Unix())
 	return r.rnd.Uint32()
 }
 
 func (r *Rand) uint64() uint64 {
+	r.rnd.Seed(current().Unix())
 	return r.rnd.Uint64()
 }
 
 func (r *Rand) float() float32 {
+	r.rnd.Seed(current().Unix())
 	return r.rnd.Float32()
 }
 
 func (r *Rand) double() float64 {
+	r.rnd.Seed(current().Unix())
 	return r.rnd.Float64()
 }
 
-func (r *Rand) pickupEnum(len int) int {
+func (r *Rand) pickupNum(len int) int {
+	r.rnd.Seed(current().Unix())
 	return r.rnd.Intn(len)
 }
 
