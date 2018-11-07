@@ -3,6 +3,7 @@ package call
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"strings"
 
 	_grpc "github.com/Code-Hex/grpcrnd/grpc"
@@ -160,6 +161,16 @@ func buildOutgoingMetadata(header []string) metadata.MD {
 func (c *command) createMessage(mdesc *desc.MethodDescriptor) (*dynamic.Message, error) {
 	msg := dynamic.NewMessage(mdesc.GetInputType())
 	m := retriveFields(msg.GetKnownFields())
+	b, err := json.MarshalIndent(&m, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	f, err := os.Create("param-rc.json")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create rc file")
+	}
+	defer f.Close()
+	f.Write(b)
 	param, err := json.Marshal(&m)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create param json")
@@ -170,47 +181,150 @@ func (c *command) createMessage(mdesc *desc.MethodDescriptor) (*dynamic.Message,
 	return msg, nil
 }
 
+const times = 5
+
 func retriveFields(fields []*desc.FieldDescriptor) map[string]interface{} {
+	r := NewRand()
 	m := make(map[string]interface{}, 0)
 	for _, field := range fields {
 		key := field.GetJSONName()
-		r := NewRand()
+		isRepeated := field.IsRepeated()
 		// https://github.com/golang/protobuf/blob/157d9c53be5810dd5a0fac4a467f7d5f400042ea/protoc-gen-go/descriptor/descriptor.pb.go#L51-L81
 		switch *field.GetType().Enum() {
 		case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
-			m[key] = r.double()
+			if isRepeated {
+				n := r.pickupNum(times)
+				s := make([]float64, n)
+				for i := 0; i < n; i++ {
+					s[i] = r.double()
+				}
+				m[key] = s
+			} else {
+				m[key] = r.double()
+			}
 		case descriptor.FieldDescriptorProto_TYPE_FLOAT:
-			m[key] = r.float()
+			if isRepeated {
+				n := r.pickupNum(times)
+				s := make([]float32, n)
+				for i := 0; i < n; i++ {
+					s[i] = r.float()
+				}
+				m[key] = s
+			} else {
+				m[key] = r.float()
+			}
 		case descriptor.FieldDescriptorProto_TYPE_UINT32:
-			m[key] = r.uint32()
+			if isRepeated {
+				n := r.pickupNum(times)
+				s := make([]uint32, n)
+				for i := 0; i < n; i++ {
+					s[i] = r.uint32()
+				}
+				m[key] = s
+			} else {
+				m[key] = r.uint32()
+			}
 		case descriptor.FieldDescriptorProto_TYPE_UINT64:
-			m[key] = r.uint64()
+			if isRepeated {
+				n := r.pickupNum(times)
+				s := make([]uint64, n)
+				for i := 0; i < n; i++ {
+					s[i] = r.uint64()
+				}
+				m[key] = s
+			} else {
+				m[key] = r.uint64()
+			}
 		case descriptor.FieldDescriptorProto_TYPE_INT32,
 			descriptor.FieldDescriptorProto_TYPE_FIXED32,
 			descriptor.FieldDescriptorProto_TYPE_SFIXED32,
 			descriptor.FieldDescriptorProto_TYPE_SINT32:
-			m[key] = r.int32()
+			if isRepeated {
+				n := r.pickupNum(times)
+				s := make([]int32, n)
+				for i := 0; i < n; i++ {
+					s[i] = r.int32()
+				}
+				m[key] = s
+			} else {
+				m[key] = r.int32()
+			}
 		case descriptor.FieldDescriptorProto_TYPE_INT64,
 			descriptor.FieldDescriptorProto_TYPE_FIXED64,
 			descriptor.FieldDescriptorProto_TYPE_SFIXED64,
 			descriptor.FieldDescriptorProto_TYPE_SINT64:
-			m[key] = r.int64()
+			if isRepeated {
+				n := r.pickupNum(times)
+				s := make([]int64, n)
+				for i := 0; i < n; i++ {
+					s[i] = r.int64()
+				}
+				m[key] = s
+			} else {
+				m[key] = r.int64()
+			}
 		case descriptor.FieldDescriptorProto_TYPE_BOOL:
-			m[key] = r.bool()
+			if isRepeated {
+				n := r.pickupNum(times)
+				s := make([]bool, n)
+				for i := 0; i < n; i++ {
+					s[i] = r.bool()
+				}
+				m[key] = s
+			} else {
+				m[key] = r.bool()
+			}
 		case descriptor.FieldDescriptorProto_TYPE_BYTES:
-			m[key] = r.bytes()
+			if isRepeated {
+				n := r.pickupNum(times)
+				s := make([][]byte, n)
+				for i := 0; i < n; i++ {
+					s[i] = r.bytes()
+				}
+				m[key] = s
+			} else {
+				m[key] = r.bytes()
+			}
 		case descriptor.FieldDescriptorProto_TYPE_STRING:
-			m[key] = r.string()
+			if isRepeated {
+				n := r.pickupNum(times)
+				s := make([]string, n)
+				for i := 0; i < n; i++ {
+					s[i] = r.string()
+				}
+				m[key] = s
+			} else {
+				m[key] = r.string()
+			}
 		// Group is deprecated in proto3.
 		// case descriptor.FieldDescriptorProto_TYPE_GROUP:
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			msg := field.GetMessageType()
-			m[key] = retriveFields(msg.GetFields())
+			if isRepeated {
+				n := r.pickupNum(times)
+				s := make([]map[string]interface{}, n)
+				for i := 0; i < n; i++ {
+					s[i] = retriveFields(msg.GetFields())
+				}
+				m[key] = s
+			} else {
+				m[key] = retriveFields(msg.GetFields())
+			}
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
 			enum := field.GetEnumType().GetValues()
 			num := len(enum)
-			idx := r.pickupEnum(num)
-			m[key] = enum[idx].GetNumber()
+			if isRepeated {
+				n := r.pickupNum(times)
+				s := make([]int32, n)
+				for i := 0; i < n; i++ {
+					idx := r.pickupNum(num)
+					s[i] = enum[idx].GetNumber()
+				}
+				m[key] = s
+			} else {
+				idx := r.pickupNum(num)
+				m[key] = enum[idx].GetNumber()
+			}
 		default:
 			// TODO: oneof ...???
 		}
