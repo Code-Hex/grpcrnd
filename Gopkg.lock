@@ -72,6 +72,25 @@
   revision = "98e92bc156677950a3bedb128a7227b40f0ff125"
 
 [[projects]]
+  digest = "1:8f5579a88f14ca4029f38f7491f12f578e38d942d9343e63aaa68f14c31df053"
+  name = "github.com/lestrrat-go/file-rotatelogs"
+  packages = [
+    ".",
+    "internal/option",
+  ]
+  pruneopts = "UT"
+  revision = "3b4f34a036f374c18d604e1b8006d9fbb9593c06"
+  version = "v2.2.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:8654122ef85f2bc03859b0a7ea2d36c9965888689cdac7640cceaa6edb11cff6"
+  name = "github.com/lestrrat-go/strftime"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "8b31f9c59b0feb56c456ce49a7b3d2b2e93a6f18"
+
+[[projects]]
   digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
@@ -222,6 +241,7 @@
     "github.com/kazegusuri/grpcurl/internal",
     "github.com/kazegusuri/grpcurl/internal/testdata",
     "github.com/kazegusuri/grpcurl/internal/testdata/v2",
+    "github.com/lestrrat-go/file-rotatelogs",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "golang.org/x/net/context",

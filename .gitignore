@@ -3,3 +3,4 @@
 /_output/
 *.test
 grpcrnd
+logs

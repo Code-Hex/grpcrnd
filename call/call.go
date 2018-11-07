@@ -3,7 +3,6 @@ package call
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	_grpc "github.com/Code-Hex/grpcrnd/grpc"
@@ -30,6 +29,7 @@ type command struct {
 	cmd         *cobra.Command
 	insecure    *bool
 	headers     []string
+	uselog      bool
 	marshaler   *jsonpb.Marshaler
 	unmarshaler *jsonpb.Unmarshaler
 }
@@ -59,7 +59,8 @@ grpcrnd call localhost:8888 test.Test.Echo -H 'UserAgent: grpcrand'
 		},
 	}
 	c.cmd.RunE = c.Run()
-	c.cmd.Flags().StringArrayVarP(&c.headers, "header", "H", nil, "header")
+	c.cmd.Flags().StringArrayVarP(&c.headers, "header", "H", nil, "send with header")
+	c.cmd.Flags().BoolVarP(&c.uselog, "log", "l", false, "specify if you want to output to logs")
 	return c
 }
 
@@ -137,7 +138,9 @@ func (c *command) Call(client *reflect.Client, reflectionMethod string) error {
 		return errors.Wrap(err, "failed to marshal json response")
 	}
 
-	fmt.Println(respJSON)
+	if err := c.output(respJSON); err != nil {
+		return errors.Wrap(err, "failed to write log")
+	}
 	return nil
 }
 
