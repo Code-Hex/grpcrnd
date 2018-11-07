@@ -1,4 +1,4 @@
-package grpcrnd
+package call
 
 import (
 	"math/rand"

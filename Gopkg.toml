@@ -33,20 +33,12 @@
   version = "1.2.0"
 
 [[constraint]]
-  name = "github.com/jessevdk/go-flags"
-  version = "1.4.0"
-
-[[constraint]]
   name = "github.com/jhump/protoreflect"
   version = "1.1.0"
 
 [[constraint]]
   name = "github.com/k0kubun/pp"
   version = "2.3.0"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/kazegusuri/grpcurl"
 
 [[constraint]]
   name = "github.com/pkg/errors"
@@ -59,6 +51,10 @@
 [[constraint]]
   name = "google.golang.org/grpc"
   version = "1.16.0"
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+  version = "v0.0.3"
 
 [prune]
   go-tests = true

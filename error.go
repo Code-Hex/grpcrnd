@@ -1,4 +1,4 @@
-package grpcrnd
+package main
 
 import "os"
 
@@ -11,19 +11,17 @@ func (u usage) Error() string { return u.err.Error() }
 func makeUsageError(err error) error { return usage{err: err} }
 
 // UnwrapErrors get important message from wrapped error message
-func UnwrapErrors(err error) (int, error) {
+func UnwrapErrors(err error) error {
 	for e := err; e != nil; {
 		switch e.(type) {
 		case usage:
 			os.Stderr.WriteString(e.Error())
-			return 0, nil
-		case exiter:
-			return e.(exiter).ExitCode(), e
+			return nil
 		case causer:
 			e = e.(causer).Cause()
 		default:
-			return 1, e // default error
+			return e // default error
 		}
 	}
-	return 0, nil
+	return nil
 }

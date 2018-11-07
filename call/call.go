@@ -1,4 +1,4 @@
-package grpcrnd
+package call
 
 import (
 	"context"
@@ -6,24 +6,97 @@ import (
 	"fmt"
 	"strings"
 
+	_grpc "github.com/Code-Hex/grpcrnd/grpc"
+
+	"github.com/Code-Hex/grpcrnd/reflect"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
-func (c *reflectClient) Call(headers []string, reflectionMethod string) error {
+type CommandRunner interface {
+	Run() func(cmd *cobra.Command, args []string) error
+	Command() *cobra.Command
+}
+
+type command struct {
+	cmd         *cobra.Command
+	insecure    *bool
+	headers     []string
+	marshaler   *jsonpb.Marshaler
+	unmarshaler *jsonpb.Unmarshaler
+}
+
+func New(insecure *bool) CommandRunner {
+	c := &command{
+		cmd: &cobra.Command{
+			Use:   "call <addr> <method>",
+			Short: "call gRPC method using generated random parameter",
+			Example: `
+* call
+grpcrnd call localhost:8888 test.Test.Echo
+
+* call with header
+grpcrnd call localhost:8888 test.Test.Echo -H 'UserAgent: grpcrand'
+`,
+			Args:         cobra.ExactArgs(2),
+			SilenceUsage: true,
+		},
+		insecure: insecure,
+		marshaler: &jsonpb.Marshaler{
+			OrigName:     true,
+			EmitDefaults: true,
+		},
+		unmarshaler: &jsonpb.Unmarshaler{
+			AllowUnknownFields: true,
+		},
+	}
+	c.cmd.RunE = c.Run()
+	c.cmd.Flags().StringArrayVarP(&c.headers, "header", "H", nil, "header")
+	return c
+}
+
+func (c *command) Command() *cobra.Command { return c.cmd }
+
+func (c *command) Run() func(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+	return func(cmd *cobra.Command, args []string) error {
+		conn, err := _grpc.NewClientConnection(ctx, args[0], *c.insecure)
+		if err != nil {
+			return errors.Wrap(err, "failed to make a gRPC connection")
+		}
+		defer conn.Close()
+		client := reflect.NewGRPCClient(ctx, conn)
+		if err := c.Call(client, args[1]); err != nil {
+			return errors.Wrap(err, "failed to call gRPC method")
+		}
+		return nil
+	}
+}
+
+func detectServiceMethod(reflectionMethod string) (string, string, error) {
 	n := strings.LastIndex(reflectionMethod, ".")
 	if n < 0 {
-		return errors.Errorf("invalid reflection method name: %s", reflectionMethod)
+		return "", "", errors.Errorf("invalid reflection method name: %s", reflectionMethod)
 	}
 	service := reflectionMethod[0:n]
 	method := reflectionMethod[n+1:]
-	svc, err := c.client.ResolveService(service)
+	return service, method, nil
+}
+
+func (c *command) Call(client *reflect.Client, reflectionMethod string) error {
+	service, method, err := detectServiceMethod(reflectionMethod)
+	if err != nil {
+		return errors.Wrap(err, "unexpected format")
+	}
+	svc, err := client.ResolveService(service)
 	if err != nil {
 		return errors.Wrapf(err, "failed to resolve service %s", service)
 	}
@@ -46,11 +119,11 @@ func (c *reflectClient) Call(headers []string, reflectionMethod string) error {
 		pp.Println(string(reqJSON))
 	}
 
-	ctx := metadata.NewOutgoingContext(context.Background(), buildOutgoingMetadata(headers))
+	ctx := metadata.NewOutgoingContext(context.Background(), buildOutgoingMetadata(c.headers))
 
 	var headerMD metadata.MD
 	var trailerMD metadata.MD
-	resp, err := c.stub.InvokeRpc(ctx, mdesc, msg, grpc.Header(&headerMD), grpc.Trailer(&trailerMD))
+	resp, err := client.InvokeRPC(ctx, mdesc, msg, grpc.Header(&headerMD), grpc.Trailer(&trailerMD))
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {
@@ -81,9 +154,9 @@ func buildOutgoingMetadata(header []string) metadata.MD {
 	return metadata.Pairs(pairs...)
 }
 
-func (c *reflectClient) createMessage(mdesc *desc.MethodDescriptor) (*dynamic.Message, error) {
+func (c *command) createMessage(mdesc *desc.MethodDescriptor) (*dynamic.Message, error) {
 	msg := dynamic.NewMessage(mdesc.GetInputType())
-	m := c.retriveFields(msg.GetKnownFields())
+	m := retriveFields(msg.GetKnownFields())
 	param, err := json.Marshal(&m)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create param json")
@@ -94,7 +167,7 @@ func (c *reflectClient) createMessage(mdesc *desc.MethodDescriptor) (*dynamic.Me
 	return msg, nil
 }
 
-func (c *reflectClient) retriveFields(fields []*desc.FieldDescriptor) map[string]interface{} {
+func retriveFields(fields []*desc.FieldDescriptor) map[string]interface{} {
 	m := make(map[string]interface{}, 0)
 	for _, field := range fields {
 		key := field.GetJSONName()
@@ -129,7 +202,7 @@ func (c *reflectClient) retriveFields(fields []*desc.FieldDescriptor) map[string
 		// case descriptor.FieldDescriptorProto_TYPE_GROUP:
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			msg := field.GetMessageType()
-			m[key] = c.retriveFields(msg.GetFields())
+			m[key] = retriveFields(msg.GetFields())
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
 			enum := field.GetEnumType().GetValues()
 			num := len(enum)

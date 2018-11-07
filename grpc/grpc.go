@@ -1,4 +1,4 @@
-package grpcrnd
+package grpc
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-func NewGRPCConnection(ctx context.Context, addr string, insecure bool) (*grpc.ClientConn, error) {
+func NewClientConnection(ctx context.Context, addr string, insecure bool) (*grpc.ClientConn, error) {
 	var dialOpts []grpc.DialOption
 	if insecure {
 		dialOpts = append(dialOpts, grpc.WithInsecure())
